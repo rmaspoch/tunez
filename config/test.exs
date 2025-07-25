@@ -1,4 +1,5 @@
 import Config
+config :ash, policies: [show_policy_breakdowns?: true]
 
 # Configure your database
 #
@@ -6,8 +7,8 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :tunez, Tunez.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: System.fetch_env!("POSTGRES_USER"),
+  password: System.fetch_env!("POSTGRES_PASSWORD"),
   hostname: "localhost",
   database: "tunez_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
