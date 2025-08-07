@@ -3,7 +3,8 @@ defmodule Tunez.Music.Album do
     otp_app: :tunez,
     domain: Tunez.Music,
     data_layer: AshPostgres.DataLayer,
-    extensions: [AshGraphql.Resource, AshJsonApi.Resource]
+    extensions: [AshGraphql.Resource, AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
 
   graphql do
     type :album
@@ -32,6 +33,29 @@ defmodule Tunez.Music.Album do
     update :update do
       accept [:name, :year_released, :cover_image_url]
     end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:role, :admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action(:create) do
+      authorize_if actor_attribute_equals(:role, :editor)
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if expr(^actor(:role) == :editor and created_by_id == ^actor(:id))
+    end
+  end
+
+  changes do
+    change relate_actor(:created_by, allow_nil?: true), on: [:create]
+    change relate_actor(:updated_by, allow_nil?: true)
   end
 
   validations do
@@ -71,13 +95,16 @@ defmodule Tunez.Music.Album do
     update_timestamp :updated_at
   end
 
+  def next_year, do: Date.utc_today().year + 1
+
   relationships do
     belongs_to :artist, Tunez.Music.Artist do
       allow_nil? false
     end
-  end
 
-  def next_year, do: Date.utc_today().year + 1
+    belongs_to :created_by, Tunez.Music.Artist
+    belongs_to :updated_by, Tunez.Music.Artist
+  end
 
   identities do
     identity :unique_album_names_per_artist, [:name, :artist_id],

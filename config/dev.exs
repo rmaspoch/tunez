@@ -1,5 +1,7 @@
 import Config
+
 config :ash, policies: [show_policy_breakdowns?: true]
+config :ash_authentication, debug_authentication_failures?: true
 
 # Configure your database
 config :tunez, Tunez.Repo,
@@ -84,5 +86,3 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
-
-config :ash_authentication, debug_authentication_failures?: true
